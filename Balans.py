@@ -252,6 +252,9 @@ def Graph(data, benchmark, ticker, period):
     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
+    df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
+
+    
 
     if len(period) > 1:
         start = periode[sorted_periode[0]]['start']
@@ -324,14 +327,15 @@ def ZoekGraph(data, benchmark, ticker, start_date, end_date):
     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-
+    df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
     df = df_base.loc[start_date:end_date]
 
     dfn = df.reset_index().melt('Datum')
     dfn1 = alt.Chart(dfn).mark_line().encode(
         x = ('Datum:T'),
         y = ('value:Q'),
-        color = 'variable:N').properties(
+        color = 'variable:N',
+        tooltip=['Datum:T','value:Q']).properties(
             height = 500,
             width = 750).interactive()
 
@@ -344,14 +348,14 @@ def ZoekGraph(data, benchmark, ticker, start_date, end_date):
 #SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = VOEG NUMMER IN AND "Datum" = "VOEG DATUM IN " order by "Current_Value_in_EUR"''', con = engine).set_index('Datum')
 def ShowPortfolio(x, date):
     engine = create_engine('sqlite:///DatabaseVB1.db')
-    df = pd.read_sql(f"""  SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
+    df = pd.read_sql(f""" SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
     return df
 
 # Transacties weergave knop en query    
 #SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs", FROM Traderecon WHERE "Account_Number" = VOEG NUMMER IN  order by "Datum"''', +EVT START EN EINDDATUM con = engine).set_index('Datum')
 def ShowTransaction(x):
     engine = create_engine('sqlite:///DatabaseVB1.db')
-    df = pd.read_sql(f"""  SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", "Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
+    df = pd.read_sql(f"""  SELECT "Datum", "Transaction_Type_Code", "Transaction_Currency", "Quantity", "Instrument_Name", "Price", "Invoice_Amount", "Brokerage_Fees", "Other_Transaction_Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
     return df
 def users():
     engine = create_engine('sqlite:///DatabaseVB1.db')

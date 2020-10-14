@@ -317,33 +317,7 @@ def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
     return df
 
 
-
-
-
-#def ZoekGraph(data, benchmark, ticker, start_date, end_date):
-#    # benchmark['Start Waarde'] = benchmark[f'{ticker} Eind Waarde'].shift(1)
-#    # benchmark['Benchmark Dag Rendement'] = ((benchmark[f'{ticker} Eind Waarde'] - benchmark['Start Waarde']) / benchmark['Start Waarde']).round(5)
-#
-#    df_port_bench = data.merge(benchmark, on='Datum', how='left')
-#
-#    df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-#    df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-#    df_base = df_port_bench[['Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-#
-#    df = df_base.loc[start_date:end_date]
-#
-#    dfn = df.reset_index().melt('Datum')
-#    dfn1 = alt.Chart(dfn).mark_line().encode(
-#        x = ('Datum:T'),
-#        y = ('value:Q'),
-#        color='variable:N').properties(
-#            height=500,
-#            width=750).interactive()
-#
-#    graph = st.altair_chart(dfn1) 
-#
-#    return graph
-
+#Functie voor de grafiek met als start en eind datum handmatige selectie
 def ZoekGraph(data, benchmark, ticker, start_date, end_date):
     df_port_bench = data.merge(benchmark, on='Datum', how='left')
     df_port_bench['Benchmark Dag Rendement'].fillna(0)
@@ -364,75 +338,22 @@ def ZoekGraph(data, benchmark, ticker, start_date, end_date):
     graph = st.altair_chart(dfn1) 
 
     return graph
-
-
-
-
-
-# Oude zoekportfolio ontwikkeling functie --backup
-# def ZoekPortfOntwikkeling1(data, start_datum, eind_datum):
-#     sd = start_datum
-#     ed = eind_datum
-
-#     df = data.loc[sd:ed]
-#     portf_startwaarde = df.loc[sd,['Start Waarde']][0]
-#     portf_stortingen = df.loc[sd:ed,['Stortingen']].sum()[0]
-#     portf_deponeringen = df.loc[sd:ed,['Deponeringen']].sum()[0]
-#     portf_onttrekkingen = df.loc[sd:ed,['Onttrekkingen']].sum()[0]
-#     portf_lichtingen = df.loc[sd:ed,['Lichtingen']].sum()[0]
-#     portf_eindwaarde = df.loc[ed,['Eind Waarde']][0]
-#     startcumrendement = df.loc[sd,['SW Portfolio Cumulatief Rendement']][0]
-#     eindcumrendement = df.loc[ed,['EW Portfolio Cumulatief Rendement']][0]
-    
-    
-#     overview = [portf_startwaarde, portf_stortingen, portf_deponeringen, portf_onttrekkingen, portf_lichtingen, 
-#                portf_eindwaarde, startcumrendement, eindcumrendement]
-
-#     df_final = pd.DataFrame([overview], columns = ['Start Waarde', 'Stortingen', 'Deponeringen', 'Onttrekkingen', 'Lichtingen', 'Eind Waarde', 'Start Cum Rend', 'Eind Cum Rend'])
-    
-#     df_final['Abs Rendement'] = df_final['Eind Waarde'] - df_final['Start Waarde'] - df_final['Stortingen'] - df_final['Deponeringen'] + df_final['Onttrekkingen'] + df_final['Lichtingen']
-#     #df_final['Rendement'] = (df_final['Abs Rendement'] / df_final['Start Waarde'])
-    
-#     df_final['Cumulatief Rendement'] = (eindcumrendement - startcumrendement) / startcumrendement
-    
-#     return df_final
-
-# @st.cache
-# def GetOverview(data, kwartaals): 
-#     startwaarde, stortingen, deponeringen, onttrekkingen, lichtingen, eindwaarde = [],[],[],[],[],[]
-#     for kwartaal in kwartaals:
-#         startwaarde.append(data.loc[periode[kwartaal]['start'],['Start Waarde']][0])
-#         stortingen.append((data.loc[periode[kwartaal]['start']:periode[kwartaal]['end'],['Stortingen']]).sum()[0])
-#         deponeringen.append((data.loc[periode[kwartaal]['start']:periode[kwartaal]['end'],['Deponeringen']]).sum()[0])
-#         onttrekkingen.append((data.loc[periode[kwartaal]['start']:periode[kwartaal]['end'],['Onttrekkingen']]).sum()[0])
-#         lichtingen.append((data.loc[periode[kwartaal]['start']:periode[kwartaal]['end'],['Lichtingen']]).sum()[0])
-#         eindwaarde.append(data.loc[periode[kwartaal]['end'],['Eind Waarde']][0])
-
-
-
-
-#     overview = list(zip(startwaarde, stortingen, deponeringen, onttrekkingen, lichtingen, eindwaarde))
-    
-#     df = pd.DataFrame(overview, 
-#            columns=["Start Waarde","Stortingen","Deponeringen","Onttrekkingen","Lichtingen","Eind Waarde"], index = kwartaals)
-
-
-#     df['Abs Rendement'] = df['Eind Waarde'] - df['Start Waarde'] - df['Stortingen'] - df['Deponeringen'] + df['Onttrekkingen'] + df['Lichtingen']
-
-#     df['Rendement'] = (df['Eind Waarde'] - df['Start Waarde']) / df['Start Waarde']
-
-#     return df
                  
 
 # Portefeuille weergave knop en query    
 #SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = VOEG NUMMER IN AND "Datum" = "VOEG DATUM IN " order by "Current_Value_in_EUR"''', con = engine).set_index('Datum')
-
+def ShowPortfolio(x, date):
+    engine = create_engine('sqlite:///DatabaseVB1.db')
+    df = pd.read_sql(f"""  SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
+    return df
 
 # Transacties weergave knop en query    
 #SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs", FROM Traderecon WHERE "Account_Number" = VOEG NUMMER IN  order by "Datum"''', +EVT START EN EINDDATUM con = engine).set_index('Datum')
-
-
+def ShowTransaction(x):
+    engine = create_engine('sqlite:///DatabaseVB1.db')
+    df = pd.read_sql(f"""  SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", "Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
+    return df
 def users():
     engine = create_engine('sqlite:///DatabaseVB1.db')
-    users_df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon;''', con = engine) 
-    return users_df['Users']
+    df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon;''', con = engine) 
+    return df['Users']

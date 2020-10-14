@@ -12,7 +12,9 @@ if st.sidebar.button('Lees Input Bestanden'):
 	LoadData()
 
 
-reknr = st.sidebar.text_input("Rekeningnummer")
+#reknr = st.sidebar.text_input("Rekeningnummer")
+userslist = users()
+reknr = st.sidebar.selectbox('Selecteer een gebruiker', userslist)
 df = GetRendement(reknr)
 
 st.sidebar.markdown("# Periode")
@@ -27,7 +29,9 @@ bench_spy = getBenchmarkData("SPYY.DE")
 bench_aex = getBenchmarkData("^AEX")
 bench_iusq = getBenchmarkData("IUSQ.DE")
 
-userslist = st.table(users())
+
+
+
 
 if st.sidebar.button('Toon Data'):
     engine = create_engine('sqlite:///DatabaseVB1.db')

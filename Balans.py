@@ -431,5 +431,5 @@ def ZoekGraph(data, benchmark, ticker, start_date, end_date):
 
 def users():
     engine = create_engine('sqlite:///DatabaseVB1.db')
-    users_df = pd.read_sql('''Select distinct(Account_Number) from Posrecon;''', con = engine) 
-    return users_df
+    users_df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon;''', con = engine) 
+    return users_df['Users']

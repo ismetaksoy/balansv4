@@ -117,6 +117,7 @@ def GetRendement(x):
     ### MAAK KOLOM ACTUELE RENDEMENT EN BEREKEN RENDEMENT VAN WAARDE PORTEFEUILLE EN ONTTREKKINGEN / STORTINGEN
     # start waarde is de eind waarde van de vorige dag
     df_final['Start Waarde'] = df_final["Eind Waarde"].shift(1)
+    df_final['Start Waarde'] = df_final["Start Waarde"].fillna(df_final["Eind Waarde"])
     df_final['Eind Waarde'] = df_final['Eind Waarde'].fillna(df_final['Start Waarde'] + df_final['Stortingen'] + 
                                                              df_final['Deponeringen'] - df_final['Onttrekkingen'] - 
                                                              df_final['Lichtingen'])
@@ -127,6 +128,8 @@ def GetRendement(x):
     df_final['EW Portfolio Cumulatief Rendement'] = (1 + df_final['Dag Rendement']).cumprod()
 
     df_final['SW Portfolio Cumulatief Rendement'] = df_final['EW Portfolio Cumulatief Rendement'].shift(1)
+    df_final['SW Portfolio Cumulatief Rendement'] = df_final['SW Portfolio Cumulatief Rendement'].fillna(1)
+    #df_final['SW Portfolio Cumulatief Rendement'] = df_final['SW Portfolio Cumulatief Rendement'].fillna(1.0)
     #df_final['Eind Waarde'] =  pd.to_numeric(df_final['Eind Waarde'], downcast = 'float')
     columns = ['Start Waarde','Stortingen','Deponeringen', 'Onttrekkingen', 'Lichtingen', 'Eind Waarde', 'Dag Rendement', 'SW Portfolio Cumulatief Rendement', 'EW Portfolio Cumulatief Rendement']
     

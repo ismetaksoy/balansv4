@@ -350,7 +350,6 @@ def ShowPortfolio(x, date):
     engine = create_engine('sqlite:///DatabaseVB1.db')
     df = pd.read_sql(f""" SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
     return df
-
 # Transacties weergave knop en query    
 #SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs", FROM Traderecon WHERE "Account_Number" = VOEG NUMMER IN  order by "Datum"''', +EVT START EN EINDDATUM con = engine).set_index('Datum')
 def ShowTransaction(x):

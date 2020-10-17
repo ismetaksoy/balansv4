@@ -320,7 +320,7 @@ def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
     return df
 
 
-<<<<<<< HEAD
+
 # #Functie voor de grafiek met als start en eind datum handmatige selectie
 # def ZoekGraph(data, benchmark, ticker, start_date, end_date):
 #     df_port_bench = data.merge(benchmark, on='Datum', how='left')
@@ -338,7 +338,7 @@ def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
 #         color = 'variable:N').properties(
 #             height = 500,
 #             width = 750).interactive()
-=======
+
 #Functie voor de grafiek met als start en eind datum handmatige selectie
 def ZoekGraph(data, benchmark, ticker, start_date, end_date):
     df_port_bench = data.merge(benchmark, on='Datum', how='left')
@@ -357,7 +357,7 @@ def ZoekGraph(data, benchmark, ticker, start_date, end_date):
         tooltip=['Datum:T','value:Q']).properties(
             height = 500,
             width = 750).interactive()
->>>>>>> fef429c848148f5e45b26ab2cfde8c9c268bdea3
+
 
 #     graph = st.altair_chart(dfn1) 
 

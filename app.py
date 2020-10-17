@@ -4,6 +4,7 @@ import altair as alt
 import time
 import datetime
 import yfinance as yf
+import investpy
 from Balans import *
 
 st.sidebar.markdown("# Dashboard")
@@ -29,52 +30,62 @@ bench_aex = getBenchmarkData("^AEX")
 bench_iusq = getBenchmarkData("IUSQ.DE")
 
 
+#investing_iusq = benchmarkdatainvesting("iShares MSCI ACWI UCITS", "germany") 
+
 
 if st.sidebar.button('Toon Data'):
-    engine = create_engine('sqlite:///DatabaseVB1.db')
-    df = GetRendement(reknr)
 
-    # Kies hier de start en eind datum
-    start_d = start_date.strftime("%Y-%m-%d") # Verander datum terug naar Y-m-d
-    end_d = end_date.strftime("%Y-%m-%d")
-    
-    
-    # # Het systeem kijkt in de database wat de start en eind datums zijn voor de rekeningnummer en geeft deze als output
-    database_start_date = pd.read_sql(f'''
-        select datum from posrecon where Account_Number = "{reknr}"
-        union
-        select datum from traderecon where Account_Number = "{reknr}"
-        order by datum asc limit 1;
-
-        ''', con = engine)
-    database_end_date = pd.read_sql(f'''
-        select datum from posrecon where Account_Number = "{reknr}"
-        union
-        select datum from traderecon where Account_Number = "{reknr}"
-        order by datum desc limit 1;''', con = engine)
-    
-    new_start_date = pd.to_datetime(database_start_date['Datum'][0]).strftime("%Y-%m-%d")
-    new_end_date = pd.to_datetime(database_end_date['Datum'][0]).strftime("%Y-%m-%d")
-
-
-    # # Hier vergelijken we gekozen start/eind datum en de start/eind datum in de database. Als de gekozen start/eind datum kleiner/groter is dan wat er in de database staat zal deze de nieuwe
-    # # start/eind datum worden
-
-    if start_d < new_start_date:
-        start_d = new_start_date
-    if end_d > new_end_date:
-        end_d = new_end_date
         
     if not periode_keuze:
+        engine = create_engine('sqlite:///DatabaseVB1.db')
+        df = GetRendement(reknr)
+
+        # Kies hier de start en eind datum
+        start_d = start_date.strftime("%Y-%m-%d") # Verander datum terug naar Y-m-d
+        end_d = end_date.strftime("%Y-%m-%d")
+        
+        
+        # # Het systeem kijkt in de database wat de start en eind datums zijn voor de rekeningnummer en geeft deze als output
+        database_start_date = pd.read_sql(f'''
+            select datum from posrecon where Account_Number = "{reknr}"
+            union
+            select datum from traderecon where Account_Number = "{reknr}"
+            order by datum asc limit 1;
+
+            ''', con = engine)
+        database_end_date = pd.read_sql(f'''
+            select datum from posrecon where Account_Number = "{reknr}"
+            union
+            select datum from traderecon where Account_Number = "{reknr}"
+            order by datum desc limit 1;''', con = engine)
+        
+        new_start_date = pd.to_datetime(database_start_date['Datum'][0]).strftime("%Y-%m-%d")
+        new_end_date = pd.to_datetime(database_end_date['Datum'][0]).strftime("%Y-%m-%d")
+
+
+        # # Hier vergelijken we gekozen start/eind datum en de start/eind datum in de database. Als de gekozen start/eind datum kleiner/groter is dan wat er in de database staat zal deze de nieuwe
+        # # start/eind datum worden
+
+        if start_d < new_start_date:
+            start_d = new_start_date
+        if end_d > new_end_date:
+            end_d = new_end_date
+
+        engine = create_engine('sqlite:///DatabaseVB1.db')
         st.markdown("## Portefeuille Ontwikkeling")
         st.markdown(f"#### From {start_d} to {end_d}")
         st.table(ZoekPortfOntwikkeling(df, start_d, end_d))
-        st.dataframe(df)
+        #st.dataframe(df)
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
-        st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
-        ZoekGraph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, start_d, end_d)
-        st.dataframe(ShowPortfolio(reknr, start_d))
+        #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
 
+        investing_aex = benchmarkdatainvesting("aex", "netherlands")
+        klantbench = klantdata(df, "aex")
+        st.table(PortfBenchOverzicht(klantbench, start_d, end_d))
+
+        ZoekGraph(df, klantbench, start_d, end_d)
+
+        st.dataframe(ShowPortfolio(reknr, start_d))
         st.dataframe(ShowTransaction(reknr))
     else:
         st.markdown("## Portefeuille Ontwikkeling")

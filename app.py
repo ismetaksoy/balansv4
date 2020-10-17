@@ -77,6 +77,7 @@ if st.sidebar.button('Toon Data'):
         st.table(ZoekPortfOntwikkeling(df, start_d, end_d))
         #st.dataframe(df)
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
+<<<<<<< HEAD
         #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
 
         investing_aex = benchmarkdatainvesting("aex", "netherlands")
@@ -86,6 +87,13 @@ if st.sidebar.button('Toon Data'):
         ZoekGraph(df, klantbench, start_d, end_d)
 
         st.dataframe(ShowPortfolio(reknr, start_d))
+=======
+        st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
+        ZoekGraph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, start_d, end_d)
+        st.markdown("### Portefeuille overzicht op eind datum")
+        st.dataframe(ShowPortfolio(reknr, end_d))
+        st.markdown("### Transactie overzicht gedurende periode")
+>>>>>>> fef429c848148f5e45b26ab2cfde8c9c268bdea3
         st.dataframe(ShowTransaction(reknr))
     else:
         st.markdown("## Portefeuille Ontwikkeling")

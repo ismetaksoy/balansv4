@@ -35,7 +35,6 @@ bench_iusq = getBenchmarkData("IUSQ.DE")
 
 if st.sidebar.button('Toon Data'):
 
-        
     if not periode_keuze:
         engine = create_engine('sqlite:///DatabaseVB1.db')
         df = GetRendement(reknr)
@@ -79,20 +78,21 @@ if st.sidebar.button('Toon Data'):
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
         #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
 
-        investing_aex = benchmarkdatainvesting("aex", "netherlands")
-        klantbench = klantdata(df, "aex")
+        investing_aex = BenchmarkDataInvesting("aex", "netherlands")
+        klantbench = KlantData(df, "aex")
         st.table(PortfBenchOverzicht(klantbench, start_d, end_d))
 
         ZoekGraph(df, klantbench, start_d, end_d)
 
-        st.dataframe(ShowPortfolio(reknr, start_d))
+        #st.dataframe(ShowPortfolio(reknr, start_d))
 
-        st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
+        #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
         ZoekGraph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, start_d, end_d)
         st.markdown("### Portefeuille overzicht op eind datum")
         st.dataframe(ShowPortfolio(reknr, end_d))
         st.markdown("### Transactie overzicht gedurende periode")
         st.dataframe(ShowTransaction(reknr))
+
     else:
         st.markdown("## Portefeuille Ontwikkeling")
         df = GetRendement(reknr)

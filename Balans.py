@@ -117,7 +117,7 @@ def GetRendement(x):
     ### MAAK KOLOM ACTUELE RENDEMENT EN BEREKEN RENDEMENT VAN WAARDE PORTEFEUILLE EN ONTTREKKINGEN / STORTINGEN
     # start waarde is de eind waarde van de vorige dag
     df_final['Start Waarde'] = df_final["Eind Waarde"].shift(1)
-    df_final['Start Waarde'] = df_final["Start Waarde"].fillna(df_final["Eind Waarde"])
+    #df_final['Start Waarde'] = df_final["Start Waarde"].fillna(df_final["Eind Waarde"])
     df_final['Eind Waarde'] = df_final['Eind Waarde'].fillna(df_final['Start Waarde'] + df_final['Stortingen'] + 
                                                              df_final['Deponeringen'] - df_final['Onttrekkingen'] - 
                                                              df_final['Lichtingen'])
@@ -254,8 +254,6 @@ def Graph(data, benchmark, ticker, period):
     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
     df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
 
-    
-
     if len(period) > 1:
         start = periode[sorted_periode[0]]['start']
         end = periode[sorted_periode[-1]]['end']
@@ -340,23 +338,23 @@ def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
 #             width = 750).interactive()
 
 #Functie voor de grafiek met als start en eind datum handmatige selectie
-def ZoekGraph(data, benchmark, ticker, start_date, end_date):
-    df_port_bench = data.merge(benchmark, on='Datum', how='left')
-    df_port_bench['Benchmark Dag Rendement'].fillna(0)
-    df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-    df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-    df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-    df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
-    df = df_base.loc[start_date:end_date]
+# def ZoekGraph(data, benchmark, ticker, start_date, end_date):
+#     df_port_bench = data.merge(benchmark, on='Datum', how='left')
+#     df_port_bench['Benchmark Dag Rendement'].fillna(0)
+#     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
+#     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
+#     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
+#     df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
+#     df = df_base.loc[start_date:end_date]
 
-    dfn = df.reset_index().melt('Datum')
-    dfn1 = alt.Chart(dfn).mark_line().encode(
-        x = ('Datum:T'),
-        y = ('value:Q'),
-        color = 'variable:N',
-        tooltip=['Datum:T','value:Q']).properties(
-            height = 500,
-            width = 750).interactive()
+#     dfn = df.reset_index().melt('Datum')
+#     dfn1 = alt.Chart(dfn).mark_line().encode(
+#         x = ('Datum:T'),
+#         y = ('value:Q'),
+#         color = 'variable:N',
+#         tooltip=['Datum:T','value:Q']).properties(
+#             height = 500,
+#             width = 750).interactive()
 
 
 #     graph = st.altair_chart(dfn1) 
@@ -376,6 +374,8 @@ def ShowTransaction(x):
     engine = create_engine('sqlite:///DatabaseVB1.db')
     df = pd.read_sql(f"""  SELECT "Datum", "Transaction_Type_Code", "Transaction_Currency", "Quantity", "Instrument_Name", "Price", "Invoice_Amount", "Brokerage_Fees", "Other_Transaction_Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
     return df
+    
+@st.cache()
 def users():
     engine = create_engine('sqlite:///DatabaseVB1.db')
     df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon;''', con = engine) 
@@ -383,7 +383,7 @@ def users():
 
 
 @st.cache(allow_output_mutation=True)
-def benchmarkdatainvesting(bench, country):
+def BenchmarkDataInvesting(bench, country):
     conn = sqlite3.connect('DatabaseVB1.db')
     df = investpy.get_index_historical_data(index=f'{bench}',
                                           country=f'{country}',
@@ -397,7 +397,7 @@ def benchmarkdatainvesting(bench, country):
     #return df_benchmark
 
 @st.cache()
-def klantdata(data, bench):
+def KlantData(data, bench):
     conn = sqlite3.connect('DatabaseVB1.db')
     engine = create_engine('sqlite:///DatabaseVB1.db')
     df_benchmark = pd.read_sql(f''' SELECT substr(datum,1,10) as Datum, close as "Eind Waarde" FROM "{bench}" ''',
@@ -415,8 +415,8 @@ def klantdata(data, bench):
     df['Benchmark Dag Rendement'] = ((df['Eind Waarde'] - df['Start Waarde']) / df['Start Waarde']).round(5)
     df['Benchmark Dag Rendement'] = df['Benchmark Dag Rendement'].fillna(0)
 
-
     return df
+
 @st.cache
 def PortfBenchOverzicht(data, start_date, end_date):
     startwaarde = data.loc[start_date,["Start Waarde"]]
@@ -438,7 +438,6 @@ def ZoekGraph(data, bench, start_date, end_date):
     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
     df_base = df_base.rename(columns={'EW Portfolio Cumulatief Rendement':'Portfolio', 'Benchmark Cumulatief Rendement': 'Benchmark'})
-    
 
     df = df_base.loc[start_date:end_date]
     dfn = df.reset_index().melt('Datum')

@@ -205,42 +205,6 @@ def getPerf(data, kwartaals, bench):
     return df
 
 
-
-# Grafiek van Portfolio en Benchmark
-
-# def Graph(data, benchmark, ticker, period):
-#    sorted_periode = sorted(period)
-#
-#    benchmark['Start Waarde'] = benchmark[f'{ticker} Eind Waarde'].shift(1)
-#    benchmark['Benchmark Dag Rendement'] = ((benchmark[f'{ticker} Eind Waarde'] - benchmark['Start Waarde']) / benchmark['Start Waarde']).round(5)
-#    
-#    df_port_bench = data.merge(benchmark, on='Datum', how='left')
-#
-#    df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-#    df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-#    df_base = df_port_bench[['Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-#    
-#    if len(period) > 1:
-#        start = periode[sorted_periode[0]]['start']
-#        end = periode[sorted_periode[-1]]['end']
-#    else:
-#        start = periode[sorted_periode[0]]['start']
-#        end = periode[sorted_periode[0]]['end']
-#
-#    df = df_base.loc[start:end]
-#
-#    dfn = df.reset_index().melt('Datum')
-#    dfn1 = alt.Chart(dfn).mark_line().encode(
-#        x = ('Datum:T'),
-#        y = ('value:Q'),
-#        color='variable:N').properties(
-#            height=500,
-#            width=750).interactive()
-#
-#    graph = st.altair_chart(dfn1) 
-#
-#    return graph
-
 def Graph(data, benchmark, ticker, period):
     sorted_periode = sorted(period)
 
@@ -304,10 +268,21 @@ def ZoekPortfOntwikkeling(data, sd, ed):
     return df_final
 
 @st.cache
-def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
-    new_benchmark_df = data[start_date:end_date]
+def ZoekBenchmarkOntwikkeling(df, bench, start_date, end_date):
+    df_klant = df.reset_index()
+    df_klant = df_klant[['Datum']]
+    bench = df_klant.merge(bench, how='left', on='Datum')#.groupby(['Datum']).mean()
+    bench = bench.set_index('Datum')
+    bench['Eind Waarde'] = bench['Eind Waarde'].fillna(method='ffill')
+    bench["Start Waarde"] = bench["Eind Waarde"].shift(1)
+    bench['Benchmark Dag Rendement'] = ((bench['Eind Waarde'] - bench['Start Waarde']) / bench['Start Waarde']).round(5)
+    bench['Benchmark Dag Rendement'] = bench['Benchmark Dag Rendement'].fillna(0)
+
+    new_benchmark_df = bench[start_date:end_date]
     bench_sw = new_benchmark_df.loc[start_date][0]
     bench_ew = new_benchmark_df.loc[end_date][0]
+    
+    
     overview = ['{:.2f}'.format(bench_sw), '{:.2f}'.format(bench_ew)]
     df = pd.DataFrame([overview], columns =['Start Waarde', 'Eind Waarde'])
     
@@ -318,48 +293,29 @@ def ZoekBenchmarkOntwikkeling(data, start_date, end_date):
     return df
 
 
-
-# #Functie voor de grafiek met als start en eind datum handmatige selectie
-# def ZoekGraph(data, benchmark, ticker, start_date, end_date):
-#     df_port_bench = data.merge(benchmark, on='Datum', how='left')
-#     df_port_bench['Benchmark Dag Rendement'].fillna(0)
-#     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-#     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-#     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-
-#     df = df_base.loc[start_date:end_date]
-
-#     dfn = df.reset_index().melt('Datum')
-#     dfn1 = alt.Chart(dfn).mark_line().encode(
-#         x = ('Datum:T'),
-#         y = ('value:Q'),
-#         color = 'variable:N').properties(
-#             height = 500,
-#             width = 750).interactive()
-
 #Functie voor de grafiek met als start en eind datum handmatige selectie
-# def ZoekGraph(data, benchmark, ticker, start_date, end_date):
-#     df_port_bench = data.merge(benchmark, on='Datum', how='left')
-#     df_port_bench['Benchmark Dag Rendement'].fillna(0)
-#     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-#     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-#     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-#     df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
-#     df = df_base.loc[start_date:end_date]
+def ZoekGraph(data, benchmark,  start_date, end_date):
+    df_port_bench = data.merge(benchmark, on='Datum', how='left')
+    df_port_bench['Benchmark Dag Rendement'].fillna(0)
+    df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
+    df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
+    df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
+    df_base.rename(columns = {'EW Portfolio Cumulatief Rendement':'Portefeuille', 'Benchmark Cumulatief Rendement':'Benchmark' }, inplace = True)
+    df = df_base.loc[start_date:end_date]
 
-#     dfn = df.reset_index().melt('Datum')
-#     dfn1 = alt.Chart(dfn).mark_line().encode(
-#         x = ('Datum:T'),
-#         y = ('value:Q'),
-#         color = 'variable:N',
-#         tooltip=['Datum:T','value:Q']).properties(
-#             height = 500,
-#             width = 750).interactive()
+    dfn = df.reset_index().melt('Datum')
+    dfn1 = alt.Chart(dfn).mark_line().encode(
+        x = ('Datum:T'),
+        y = ('value:Q'),
+        color = 'variable:N',
+        tooltip=['Datum:T','value:Q']).properties(
+            height = 500,
+            width = 750).interactive()
 
 
-#     graph = st.altair_chart(dfn1) 
+    graph = st.altair_chart(dfn1) 
 
-#     return graph
+    return graph
                  
 
 # Portefeuille weergave knop en query    
@@ -378,7 +334,7 @@ def ShowTransaction(x):
 @st.cache()
 def users():
     engine = create_engine('sqlite:///DatabaseVB1.db')
-    df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon;''', con = engine) 
+    df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon order by Users asc;''', con = engine) 
     return df['Users']
 
 
@@ -431,24 +387,24 @@ def PortfBenchOverzicht(data, start_date, end_date):
     return df
 
 
-def ZoekGraph(data, bench, start_date, end_date):
-    df_port_bench = data.merge(bench, on="Datum", how="left")
-    df_port_bench['Benchmark Dag Rendement'].fillna(0)
-    df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
-    df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
-    df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
-    df_base = df_base.rename(columns={'EW Portfolio Cumulatief Rendement':'Portfolio', 'Benchmark Cumulatief Rendement': 'Benchmark'})
+# def ZoekGraph(data, bench, start_date, end_date):
+#     df_port_bench = data.merge(bench, on="Datum", how="left")
+#     df_port_bench['Benchmark Dag Rendement'].fillna(0)
+#     df_port_bench['Benchmark Cumulatief Rendement'] = (1 + df_port_bench['Benchmark Dag Rendement']).cumprod()
+#     df_port_bench['Benchmark Cumulatief Rendement'].fillna(method='ffill', inplace = True)
+#     df_base = df_port_bench[['EW Portfolio Cumulatief Rendement', 'Benchmark Cumulatief Rendement']]
+#     df_base = df_base.rename(columns={'EW Portfolio Cumulatief Rendement':'Portfolio', 'Benchmark Cumulatief Rendement': 'Benchmark'})
 
-    df = df_base.loc[start_date:end_date]
-    dfn = df.reset_index().melt('Datum')
-    dfn1 = alt.Chart(dfn).mark_line().encode(
-        x = ('Datum:T'),
-        y = ('value:Q'),
-        color = 'variable:N').properties(
-            height = 500,
-            width = 750).interactive()
+#     df = df_base.loc[start_date:end_date]
+#     dfn = df.reset_index().melt('Datum')
+#     dfn1 = alt.Chart(dfn).mark_line().encode(
+#         x = ('Datum:T'),
+#         y = ('value:Q'),
+#         color = 'variable:N').properties(
+#             height = 500,
+#             width = 750).interactive()
 
-    graph = st.altair_chart(dfn1) 
+#     graph = st.altair_chart(dfn1) 
 
-    return graph
-                 
+#     return graph
+#                  

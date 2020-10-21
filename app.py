@@ -23,18 +23,16 @@ start_date = st.sidebar.date_input('Start Datum')
 end_date = st.sidebar.date_input('Eind Datum')
 periode_keuze = st.sidebar.multiselect("Selecteer de gewenste periode voor de portefeuille ontwikkeling", ['Q1','Q2','Q3','Q4'])
 st.sidebar.markdown("# Benchmark")
-benchmark_keuze = st.sidebar.selectbox('Selecteer de Benchmark', ['^AEX','SPYY.DE','IUSQ.DE'])
 
-bench_spy = getBenchmarkData("SPYY.DE")
-bench_aex = getBenchmarkData("^AEX")
-bench_iusq = getBenchmarkData("IUSQ.DE")
+# Voeg hier de tickers in van aandelen die je wilt gebruiken voor de benchmark
+bench_stocks = ['^AEX', 'SPYY.DE', 'IUSQ.DE', 'RDSA.AS', 'TSLA', '^DJI', 'GC=F']
+benchmark_keuze = st.sidebar.selectbox('Selecteer de Benchmark', bench_stocks)
 
-
-#investing_iusq = benchmarkdatainvesting("iShares MSCI ACWI UCITS", "germany") 
-
+# bench_spy = getBenchmarkData("SPYY.DE")
+# bench_aex = getBenchmarkData("^AEX")
+# bench_iusq = getBenchmarkData("IUSQ.DE")
 
 if st.sidebar.button('Toon Data'):
-
     if not periode_keuze:
         engine = create_engine('sqlite:///DatabaseVB1.db')
         df = GetRendement(reknr)
@@ -78,16 +76,15 @@ if st.sidebar.button('Toon Data'):
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
         #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
 
-        investing_aex = BenchmarkDataInvesting("aex", "netherlands")
-        klantbench = KlantData(df, "aex")
-        st.table(PortfBenchOverzicht(klantbench, start_d, end_d))
+        #investing_aex = BenchmarkDataInvesting("aex", "netherlands")
+        #klantbench = KlantData(df, "aex")
+        #st.table(PortfBenchOverzicht(klantbench, start_d, end_d))
 
-        ZoekGraph(df, klantbench, start_d, end_d)
+        #ZoekGraph(df, klantbench, start_d, end_d)
 
-        #st.dataframe(ShowPortfolio(reknr, start_d))
 
-        #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
-        ZoekGraph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, start_d, end_d)
+        st.table(ZoekBenchmarkOntwikkeling(df, getBenchmarkData(benchmark_keuze), start_d, end_d))
+        ZoekGraph(df, getBenchmarkData(benchmark_keuze), start_d, end_d)
         st.markdown("### Portefeuille overzicht op eind datum")
         st.dataframe(ShowPortfolio(reknr, end_d))
         st.markdown("### Transactie overzicht gedurende periode")

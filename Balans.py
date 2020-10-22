@@ -279,8 +279,8 @@ def ZoekBenchmarkOntwikkeling(df, bench, start_date, end_date):
     bench['Benchmark Dag Rendement'] = bench['Benchmark Dag Rendement'].fillna(0)
 
     new_benchmark_df = bench[start_date:end_date]
-    bench_sw = new_benchmark_df.loc[start_date][0]
-    bench_ew = new_benchmark_df.loc[end_date][0]
+    bench_sw = new_benchmark_df.loc[start_date,["Start Waarde"]][0]
+    bench_ew = new_benchmark_df.loc[end_date,["Eind Waarde"]][0]
     
     
     overview = ['{:.2f}'.format(bench_sw), '{:.2f}'.format(bench_ew)]

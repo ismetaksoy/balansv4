@@ -366,7 +366,6 @@ def KlantData(data, bench):
     klantdatum = klantdatum[['Datum']]
     df = klantdatum.merge(df_benchmark, how = 'left', on = 'Datum' ).groupby(['Datum']).mean()
     df["Eind Waarde"] = df["Eind Waarde"].fillna(method = 'ffill')
-    #df["Eind Waarde"] = df["Eind Waarde"].fillna(method = 'bfill')
     df["Start Waarde"] = df["Eind Waarde"].shift(1)
     df['Benchmark Dag Rendement'] = ((df['Eind Waarde'] - df['Start Waarde']) / df['Start Waarde']).round(5)
     df['Benchmark Dag Rendement'] = df['Benchmark Dag Rendement'].fillna(0)

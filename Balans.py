@@ -45,7 +45,7 @@ def LoadData():
     # Maak connectie met de database en geef de locaties aan van de input bestanden
     posdirectory = './Input/Posrecon'
     tradedirectory = './Input/Traderecon'
-    conn = sqlite3.connect('DatabaseVB1.db')
+    conn = sqlite3.connect('DatabaseVB.db')
     
     # Loop over de input bestanden
     # laad ze in de database
@@ -76,7 +76,7 @@ def GetRendement(x):
      
     
     ### 1: creeeren van brug tussen sql query en database
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
     
     
     ### 2a: bepaal de eindwaarde per dag voor klant x (datum, eindwaarde)
@@ -168,8 +168,8 @@ def GetOverview(data, kwartaals):
 # Full Benchmark data
 @st.cache(allow_output_mutation=True)
 def getBenchmarkData(bench):
-    conn = sqlite3.connect('DatabaseVB1.db')
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    conn = sqlite3.connect('DatabaseVB.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
 
     ticker = yf.Ticker(bench)
     df_benchmark = ticker.history(period='20y')
@@ -321,26 +321,26 @@ def ZoekGraph(data, benchmark,  start_date, end_date):
 # Portefeuille weergave knop en query    
 #SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = VOEG NUMMER IN AND "Datum" = "VOEG DATUM IN " order by "Current_Value_in_EUR"''', con = engine).set_index('Datum')
 def ShowPortfolio(x, date):
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql(f""" SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
     return df
 # Transacties weergave knop en query    
 #SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs", FROM Traderecon WHERE "Account_Number" = VOEG NUMMER IN  order by "Datum"''', +EVT START EN EINDDATUM con = engine).set_index('Datum')
 def ShowTransaction(x):
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql(f"""  SELECT "Datum", "Transaction_Type_Code", "Transaction_Currency", "Quantity", "Instrument_Name", "Price", "Invoice_Amount", "Brokerage_Fees", "Other_Transaction_Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
     return df
     
 @st.cache()
 def users():
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon order by Users asc;''', con = engine) 
     return df['Users']
 
 
 @st.cache(allow_output_mutation=True)
 def BenchmarkDataInvesting(bench, country):
-    conn = sqlite3.connect('DatabaseVB1.db')
+    conn = sqlite3.connect('DatabaseVB.db')
     df = investpy.get_index_historical_data(index=f'{bench}',
                                           country=f'{country}',
                                           from_date='01/01/2000',
@@ -354,8 +354,8 @@ def BenchmarkDataInvesting(bench, country):
 
 @st.cache()
 def KlantData(data, bench):
-    conn = sqlite3.connect('DatabaseVB1.db')
-    engine = create_engine('sqlite:///DatabaseVB1.db')
+    conn = sqlite3.connect('DatabaseVB.db')
+    engine = create_engine('sqlite:///DatabaseVB.db')
     df_benchmark = pd.read_sql(f''' SELECT substr(datum,1,10) as Datum, close as "Eind Waarde" FROM "{bench}" ''',
                               con = conn).set_index('Datum')
     # klantdates = pd.read_sql(f'''

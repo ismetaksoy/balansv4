@@ -34,7 +34,7 @@ benchmark_keuze = st.sidebar.selectbox('Selecteer de Benchmark', bench_stocks)
 
 if st.sidebar.button('Toon Data'):
     if not periode_keuze:
-        engine = create_engine('sqlite:///DatabaseVB1.db')
+        engine = create_engine('sqlite:///DatabaseVB.db')
         df = GetRendement(reknr)
 
         # Kies hier de start en eind datum
@@ -44,17 +44,19 @@ if st.sidebar.button('Toon Data'):
         
         # # Het systeem kijkt in de database wat de start en eind datums zijn voor de rekeningnummer en geeft deze als output
         database_start_date = pd.read_sql(f'''
-            select datum from posrecon where Account_Number = "{reknr}"
+            select distinct(datum) from Posrecon where Account_Number = "{reknr}"
             union
-            select datum from traderecon where Account_Number = "{reknr}"
+            select distinct(datum) from Traderecon where Account_Number = "{reknr}"
             order by datum asc limit 1;
 
             ''', con = engine)
         database_end_date = pd.read_sql(f'''
-            select datum from posrecon where Account_Number = "{reknr}"
+            select distinct(datum) from Posrecon where Account_Number = "{reknr}"
             union
-            select datum from traderecon where Account_Number = "{reknr}"
-            order by datum desc limit 1;''', con = engine)
+            select distinct(datum) from Traderecon where Account_Number = "{reknr}"
+            order by datum desc limit 1;
+
+            ''', con = engine)
         
         new_start_date = pd.to_datetime(database_start_date['Datum'][0]).strftime("%Y-%m-%d")
         new_end_date = pd.to_datetime(database_end_date['Datum'][0]).strftime("%Y-%m-%d")
@@ -68,22 +70,14 @@ if st.sidebar.button('Toon Data'):
         if end_d > new_end_date:
             end_d = new_end_date
 
-        engine = create_engine('sqlite:///DatabaseVB1.db')
         st.markdown("## Portefeuille Ontwikkeling")
         st.markdown(f"#### From {start_d} to {end_d}")
         st.table(ZoekPortfOntwikkeling(df, start_d, end_d))
-        #st.dataframe(df)
+        
+
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
-        #st.table(ZoekBenchmarkOntwikkeling(getBenchmarkData(benchmark_keuze), start_d, end_d))
+        st.table(PortfBenchOverzicht(KlantData(df, getBenchmarkData(benchmark_keuze)), start_d, end_d))
 
-        #investing_aex = BenchmarkDataInvesting("aex", "netherlands")
-        #klantbench = KlantData(df, "aex")
-        #st.table(PortfBenchOverzicht(klantbench, start_d, end_d))
-
-        #ZoekGraph(df, klantbench, start_d, end_d)
-
-
-        st.table(ZoekBenchmarkOntwikkeling(df, getBenchmarkData(benchmark_keuze), start_d, end_d))
         ZoekGraph(df, getBenchmarkData(benchmark_keuze), start_d, end_d)
         st.markdown("### Portefeuille overzicht op eind datum")
         st.dataframe(ShowPortfolio(reknr, end_d))

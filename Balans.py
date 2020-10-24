@@ -331,13 +331,12 @@ def ShowTransaction(x):
     df = pd.read_sql(f"""  SELECT "Datum", "Transaction_Type_Code", "Transaction_Currency", "Quantity", "Instrument_Name", "Price", "Invoice_Amount", "Brokerage_Fees", "Other_Transaction_Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
     return df
     
-@st.cache()
 def users():
     engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon order by Users asc;''', con = engine) 
     return df['Users']
 
-
+# Ophalen van benchmark uit investing
 @st.cache(allow_output_mutation=True)
 def BenchmarkDataInvesting(bench, country):
     conn = sqlite3.connect('DatabaseVB.db')
@@ -352,26 +351,19 @@ def BenchmarkDataInvesting(bench, country):
     #                         con = conn).set_index('Datum')
     #return df_benchmark
 
+# Ophalen van start datum klantendatabase en mergen met de benchmarks
 @st.cache()
 def KlantData(data, bench):
-    conn = sqlite3.connect('DatabaseVB.db')
-    engine = create_engine('sqlite:///DatabaseVB.db')
-    df_benchmark = pd.read_sql(f''' SELECT substr(datum,1,10) as Datum, close as "Eind Waarde" FROM "{bench}" ''',
-                              con = conn).set_index('Datum')
-    # klantdates = pd.read_sql(f'''
-    # SELECT DATUM
-    # FROM POSRECON
-    # WHERE ACCOUNT_NUMBER = "{x}" order by Datum asc''', con = engine)
+
     klantdatum = data.reset_index()
     klantdatum = klantdatum[['Datum']]
-    df = klantdatum.merge(df_benchmark, how = 'left', on = 'Datum' ).groupby(['Datum']).mean()
-    df["Eind Waarde"] = df["Eind Waarde"].fillna(method = 'ffill')
-    df["Start Waarde"] = df["Eind Waarde"].shift(1)
+    df = klantdatum.merge(bench, how = 'left', on = 'Datum' )#.groupby(['Datum']).mean()
+    df = df.fillna(method = 'ffill')
     df['Benchmark Dag Rendement'] = ((df['Eind Waarde'] - df['Start Waarde']) / df['Start Waarde']).round(5)
     df['Benchmark Dag Rendement'] = df['Benchmark Dag Rendement'].fillna(0)
-
+    df = df.set_index("Datum")
     return df
-
+# Presenteren benchmark ontwikkeling
 @st.cache
 def PortfBenchOverzicht(data, start_date, end_date):
     startwaarde = data.loc[start_date,["Start Waarde"]]

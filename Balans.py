@@ -75,32 +75,32 @@ def GetRendement(x):
     ### 2e: bepaal de lichtingen per dag voor klant x
      
     
-    ### 1: creeeren van brug tussen sql query en database
+    # 1: creeeren van brug tussen sql query en database
     engine = create_engine('sqlite:///DatabaseVB.db')
     
     
-    ### 2a: bepaal de eindwaarde per dag voor klant x (datum, eindwaarde)
+    # 2a: bepaal de eindwaarde per dag voor klant x (datum, eindwaarde)
     df_posrecon = pd.read_sql(f'''SELECT "Datum", ROUND(sum("Current_Value_in_EUR"),2) as "Eind Waarde" FROM Posrecon WHERE "Account_Number" = "{x}" group by "Datum" order by "Datum"''', con = engine).set_index('Datum')
     
     
-    ### 2b: bepaal de stortingen per dag voor klant x (datum, stortingen)
-    ### (som van kolom invoice amount, indien OF (Transaction Type Code=O-G en Reference Code=5026) OF (Transaction Type Code=O-G en Reference Code=5000 en kolom invoice amount >0)
+    # 2b: bepaal de stortingen per dag voor klant x (datum, stortingen)
+    # (som van kolom invoice amount, indien OF (Transaction Type Code=O-G en Reference Code=5026) OF (Transaction Type Code=O-G en Reference Code=5000 en kolom invoice amount >0)
     df_stortingen = pd.read_sql (f'''  SELECT "Datum", sum("Invoice_Amount") as "Stortingen" FROM Traderecon WHERE "Account_Number" = "{x}"  AND "Reference_Code" = 5026 OR ("Account_Number" = "{x}" AND "Reference_Code" = 5000 AND "Invoice_Amount" > 0) group by "Datum" order by "Datum" ''', con = engine).set_index('Datum')
     
     
-    ### 2c: bepaal de deponeringen per dag voor klant x (datum, deponeringen)
-    ### som van kolom Deposit Value, indien (1) Transaction Type Code = D, of (2) Transaction Type Code = O en Deposit value > 0. 
+    # 2c: bepaal de deponeringen per dag voor klant x (datum, deponeringen)
+    # som van kolom Deposit Value, indien (1) Transaction Type Code = D, of (2) Transaction Type Code = O en Deposit value > 0. 
     
     df_deponeringen = pd.read_sql (f''' SELECT "Datum", sum("Deposit_Value") as Deponeringen FROM Traderecon WHERE ("Account_Number" = "{x}" AND "Transaction_Type_Code" = "D") OR ("Account_Number" = "{x}" AND "Transaction_Type_Code" = "O" AND "Deposit_Value" > 0) group by "Datum" order by "Datum" ''', con = engine).set_index('Datum')
     
     
-    ### 2d: bepaal de onttrekkingen per dag voor klant x (datum, onttrekkingen)
-    ### (som van kolom invoice amount *-1, indien (1) Reference Code=5025, (2) Reference Code=5000 en invoice amount < 0.   
+    # 2d: bepaal de onttrekkingen per dag voor klant x (datum, onttrekkingen)
+    # (som van kolom invoice amount *-1, indien (1) Reference Code=5025, (2) Reference Code=5000 en invoice amount < 0.   
     df_onttrekking = pd.read_sql (f''' SELECT Datum, sum("Invoice_Amount")*-1 as "Onttrekkingen" FROM Traderecon WHERE ("Account_Number" = "{x}" AND "Reference_Code" = 5025) OR ("Account_Number" = "{x}" AND "Reference_Code" = 5000 AND "Invoice_Amount" < 0) group by "Datum" order by "Datum" ''', con = engine).set_index('Datum')
     
 
-    ### 2e: bepaal de lichtingen per dag voor klant x (datum, lichtingen)
-    ### som van kolom Deposit Value *-1, indien (1) Transaction Type Code = L, of (2) Transaction Type Code = O en Deposit value < 0. 
+    # 2e: bepaal de lichtingen per dag voor klant x (datum, lichtingen)
+    # som van kolom Deposit Value *-1, indien (1) Transaction Type Code = L, of (2) Transaction Type Code = O en Deposit value < 0. 
     df_lichtingen = pd.read_sql (f''' SELECT Datum, sum("Deposit_Value")*-1 as "Lichtingen"  FROM Traderecon WHERE ("Account_Number" = "{x}" AND "Transaction_Type_Code" = "L") OR ("Account_Number" = "{x}" AND "Transaction_Type_Code" = "O" AND "Deposit_Value" < 0) group by "Datum" order by "Datum" ''', con = engine).set_index('Datum')
 
 
@@ -109,15 +109,15 @@ def GetRendement(x):
     df_tot_tr = pd.concat(traderecon_data).fillna(0).groupby(['Datum']).sum()
     df_final = df_posrecon.merge(df_tot_tr, on='Datum', how='outer')
     
-    ### VOEG DE OVERBOEKINGEN AAN DE DATAFRAME MET DE WAARDES PORTEFEUILLE
+    # VOEG DE OVERBOEKINGEN AAN DE DATAFRAME MET DE WAARDES PORTEFEUILLE
     traderecon_columns = ['Onttrekkingen', 'Stortingen', 'Lichtingen', 'Deponeringen']
     df_final[traderecon_columns] = df_final[traderecon_columns].fillna(0.0)
     
     
-    ### MAAK KOLOM ACTUELE RENDEMENT EN BEREKEN RENDEMENT VAN WAARDE PORTEFEUILLE EN ONTTREKKINGEN / STORTINGEN
+    # MAAK KOLOM ACTUELE RENDEMENT EN BEREKEN RENDEMENT VAN WAARDE PORTEFEUILLE EN ONTTREKKINGEN / STORTINGEN
     # start waarde is de eind waarde van de vorige dag
     df_final['Start Waarde'] = df_final["Eind Waarde"].shift(1)
-    #df_final['Start Waarde'] = df_final["Start Waarde"].fillna(df_final["Eind Waarde"])
+    
     df_final['Eind Waarde'] = df_final['Eind Waarde'].fillna(df_final['Start Waarde'] + df_final['Stortingen'] + 
                                                              df_final['Deponeringen'] - df_final['Onttrekkingen'] - 
                                                              df_final['Lichtingen'])
@@ -129,8 +129,7 @@ def GetRendement(x):
 
     df_final['SW Portfolio Cumulatief Rendement'] = df_final['EW Portfolio Cumulatief Rendement'].shift(1)
     df_final['SW Portfolio Cumulatief Rendement'] = df_final['SW Portfolio Cumulatief Rendement'].fillna(1)
-    #df_final['SW Portfolio Cumulatief Rendement'] = df_final['SW Portfolio Cumulatief Rendement'].fillna(1.0)
-    #df_final['Eind Waarde'] =  pd.to_numeric(df_final['Eind Waarde'], downcast = 'float')
+    
     columns = ['Start Waarde','Stortingen','Deponeringen', 'Onttrekkingen', 'Lichtingen', 'Eind Waarde', 'Dag Rendement', 'SW Portfolio Cumulatief Rendement', 'EW Portfolio Cumulatief Rendement']
     
     return df_final[columns]
@@ -319,19 +318,19 @@ def ZoekGraph(data, benchmark,  start_date, end_date):
                  
 
 # Portefeuille weergave knop en query    
-#SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = VOEG NUMMER IN AND "Datum" = "VOEG DATUM IN " order by "Current_Value_in_EUR"''', con = engine).set_index('Datum')
 def ShowPortfolio(x, date):
     engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql(f""" SELECT "Datum", "Amount_or_Quantity", "Instrument_Name", "Market_Price", "Position_Currency", "Current_Value_in_Position_Currency", "Current_Value_in_EUR" FROM Posrecon WHERE "Account_Number" = "{x}" AND "Datum" = "{date}" order by "Current_Value_in_EUR" """, con = engine).set_index('Datum')
     return df
+
 # Transacties weergave knop en query    
-#SELECT "Datum", "Transaction Type Code","Transaction Currency", "Quantity", Instrument_Name", "Price", "Invoice Amount", "Brokerage Fees", "Other Transaction Costs", FROM Traderecon WHERE "Account_Number" = VOEG NUMMER IN  order by "Datum"''', +EVT START EN EINDDATUM con = engine).set_index('Datum')
 def ShowTransaction(x):
     engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql(f"""  SELECT "Datum", "Transaction_Type_Code", "Transaction_Currency", "Quantity", "Instrument_Name", "Price", "Invoice_Amount", "Brokerage_Fees", "Other_Transaction_Costs" FROM Traderecon WHERE "Account_Number" = "{x}"  order by "Datum" """, con = engine).set_index('Datum')
     return df
-    
-def users():
+
+# Show disctinct account numbers   
+def Users():
     engine = create_engine('sqlite:///DatabaseVB.db')
     df = pd.read_sql('''Select distinct(Account_Number) as Users from Posrecon order by Users asc;''', con = engine) 
     return df['Users']
@@ -347,9 +346,6 @@ def BenchmarkDataInvesting(bench, country):
     df.reset_index(inplace = True)
     df.rename(columns ={'Date':'Datum'}, inplace = True)
     df.to_sql(f'{bench}', if_exists = "replace", con = conn)
-    #df_benchmark = pd.read_sql(f''' SELECT substr(datum,1,10) as Datum, close as "Eind Waarde" FROM "{bench}" ''',
-    #                         con = conn).set_index('Datum')
-    #return df_benchmark
 
 # Ophalen van start datum klantendatabase en mergen met de benchmarks
 @st.cache()
@@ -363,6 +359,7 @@ def KlantData(data, bench):
     df['Benchmark Dag Rendement'] = df['Benchmark Dag Rendement'].fillna(0)
     df = df.set_index("Datum")
     return df
+
 # Presenteren benchmark ontwikkeling
 @st.cache
 def PortfBenchOverzicht(data, start_date, end_date):
@@ -374,7 +371,6 @@ def PortfBenchOverzicht(data, start_date, end_date):
     
     df["Absolute Rendement"] = (df["Eind Waarde"][0] - df["Start Waarde"][0])
     df["Rendement"] = "{:.2%}".format(df["Absolute Rendement"][0] / df["Start Waarde"][0])
-    
     return df
 
 

@@ -85,7 +85,7 @@ if st.sidebar.button('Toon Data'):
         st.dataframe(ShowPortfolio(reknr, end_d))
         st.markdown("### Transactie overzicht gedurende periode")
         st.dataframe(ShowTransaction(reknr))
-
+        st.dataframe(df)
     else:
         st.markdown("## Portefeuille Ontwikkeling")
         df = GetRendement(reknr)

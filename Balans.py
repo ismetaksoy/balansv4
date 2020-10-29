@@ -359,6 +359,7 @@ def KlantData(data, bench):
     df = df.fillna(method = 'ffill')
     df['Benchmark Dag Rendement'] = ((df['Eind Waarde'] - df['Start Waarde']) / df['Start Waarde']).round(5)
     df['Benchmark Dag Rendement'] = df['Benchmark Dag Rendement'].fillna(0)
+    df = df.fillna(method = 'bfill')
     df = df.set_index("Datum")
     return df
 # Presenteren benchmark ontwikkeling

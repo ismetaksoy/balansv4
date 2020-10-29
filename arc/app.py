@@ -11,25 +11,10 @@ st.sidebar.markdown("# Dashboard")
 # Functies voor het inladen van bestanden
 if st.sidebar.button('Lees Input Bestanden'):
 	LoadData()
-    
-    
-## keuze om zelf rekeningnummer in te voeren of dropdown list:    
-#reknr = st.sidebar.text_input("Rekeningnummer")
-#df = GetRendement(reknr)
-
-##indien keuzen voor dropdownlist: hierboven # en hieronder # weghalen
-#userslist = users()
-#reknr = st.sidebar.selectbox('Selecteer een gebruiker', userslist)
-#df = GetRendement(reknr)
-
-
-    
 # Functie voor het presenteren van de account numbers
 userslist = Users()
 # Account number aan een variabele toevoegen
 reknr = st.sidebar.selectbox('Selecteer een gebruiker', userslist)
-
-
 # Klanten portefeuille aan een variabele koppelen die verder als input wordt gebruikt 
 df = GetRendement(reknr)
 # Input velden voor sidebar
@@ -40,7 +25,7 @@ periode_keuze = st.sidebar.multiselect("Selecteer de gewenste periode voor de po
 st.sidebar.markdown("# Benchmark")
 
 # Voeg hier de tickers in van aandelen die je wilt gebruiken voor de benchmark
-bench_stocks = ['^AEX','IAEA.AS','XMAW.MI','RDSA.AS','^GSPC','^DJI','^VIX','BTC-USD','TSLA','DTM.AS','NTM.AS','TOF.AS','IGLN.L']
+bench_stocks = ['^AEX', 'SPYY.DE', 'IUSQ.DE', 'RDSA.AS', 'TSLA', '^DJI', 'GC=F']
 benchmark_keuze = st.sidebar.selectbox('Selecteer de Benchmark', bench_stocks)
 
 if st.sidebar.button('Toon Data'):

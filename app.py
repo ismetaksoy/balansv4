@@ -7,7 +7,7 @@ import yfinance as yf
 import investpy
 from Balans import *
 
-st.sidebar.markdown("# Hello World")
+st.sidebar.markdown("# Hello World Test Test")
 
 st.sidebar.markdown("# Dashboard")
 # Functies voor het inladen van bestanden

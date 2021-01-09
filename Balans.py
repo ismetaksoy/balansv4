@@ -117,6 +117,7 @@ def GetRendement(x):
     df_final['Eind Waarde'] = df_final['Eind Waarde'].fillna(df_final['Start Waarde'] + df_final['Stortingen'] + 
                                                              df_final['Deponeringen'] - df_final['Onttrekkingen'] - 
                                                              df_final['Lichtingen'])
+
     df_final['Dag Rendement'] = ((df_final['Eind Waarde'] - df_final['Start Waarde'] - df_final['Stortingen'] - df_final['Deponeringen'] + df_final['Onttrekkingen'] + df_final['Lichtingen'] ) ) / (df_final['Start Waarde'] + df_final['Stortingen'] + df_final['Deponeringen'] - df_final['Onttrekkingen'] - df_final['Lichtingen']).round(5)
     df_final['Dag Rendement'] = df_final['Dag Rendement'].fillna(0)  
     
@@ -241,7 +242,7 @@ def Graph(data, benchmark, ticker, period):
 # We laden hierbij de dataframe van functie GetRendement in en gaan deze slicen op de start date en end date
 # Dan halen we de startwaarde, eindwaarde deponeringen etc op uit die dataframe door middel van loc functie.
 # Dit zijn single value variabelen die we dan in een one row dataframe zetten.
-@st.cache
+@st.cache(allow_output_mutation=True)
 def ZoekPortfOntwikkeling(data, sd, ed):
 
     df = data.loc[sd:ed]
@@ -263,7 +264,7 @@ def ZoekPortfOntwikkeling(data, sd, ed):
     df_final = pd.DataFrame([overview], columns = ['Start Waarde', 'Stortingen', 'Deponeringen', 'Onttrekkingen', 'Lichtingen', 'Eind Waarde', 'Start Cum Rend', 'Eind Cum Rend', 'Abs Rendement', 'Periode Cum Rendement'])
     return df_final
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def ZoekBenchmarkOntwikkeling(df, bench, start_date, end_date):
     df_klant = df.reset_index()
     df_klant = df_klant[['Datum']]
@@ -398,3 +399,73 @@ def PortfBenchOverzicht(data, start_date, end_date):
 
 #     return graph
 #                  
+
+# Rapportage functie met overzicht van alle rekeningnummers en de portefeuille ontwikkeling
+# Het systeem kijkt in de database wat de start en eind datums zijn voor de rekeningnummer en geeft deze als output
+
+
+# Deze functie maakt een list van alle account numbers
+def klantenlijst():
+    engine = create_engine('sqlite:///DatabaseVB.db')
+    klantenlijst = pd.read_sql(f'''
+    select distinct(account_number) from posrecon;
+    ''', con = engine)
+    klantenlist = klantenlijst.iloc[:-1,0]
+    return klantenlist
+
+# Deze functie berekent wat de actuele start datum is voor een portfolio (Met actueel bedoelen we de datum dat in de database zit)
+def start_date(reknr, start_d):
+    engine = create_engine('sqlite:///DatabaseVB.db')
+    start_date = pd.read_sql(f'''
+        select distinct(datum) from Posrecon where Account_Number = "{reknr}"
+        union
+        select distinct(datum) from Traderecon where Account_Number = "{reknr}"
+        order by datum asc limit 1;
+        ''', con = engine)
+    final_start_date = pd.to_datetime(start_date['Datum'][0]).strftime("%Y-%m-%d")
+
+    if start_d < final_start_date:
+            start_d = final_start_date
+    return start_d
+    
+def end_date(reknr, end_d):
+    engine = create_engine('sqlite:///DatabaseVB.db')
+    end_date = pd.read_sql(f'''
+    select distinct(datum) from Posrecon where Account_Number = "{reknr}"
+    union
+    select distinct(datum) from Traderecon where Account_Number = "{reknr}"
+    order by datum desc limit 1;
+    ''', con = engine)
+    final_end_date = pd.to_datetime(end_date['Datum'][0]).strftime("%Y-%m-%d")
+    
+    if end_d > final_end_date:
+        end_d = final_end_date
+    return end_d
+
+# Deze functie maakt een overzicht van portefeuille ontwikkelingen voor alle klanten
+@st.cache(allow_output_mutation=True, suppress_st_warning=True)
+def rapport(klanten, start_d, end_d):
+    empty = []
+    for klant in klanten:
+        sd = start_date(klant, start_d)
+        ed = end_date(klant, end_d)
+        data = GetRendement(klant)
+        overzicht = ZoekPortfOntwikkeling(data, sd ,ed)
+        overzicht['Account_Number'] = klant
+        overzicht['Start_Datum'] = sd
+        overzicht['Eind_Datum'] = ed
+        overzicht = overzicht.set_index(['Account_Number'])
+        empty.append(overzicht.iloc[0])
+        df = pd.DataFrame(empty)
+    return df
+
+# Deze functie toont de invoice amounts voor alle klanten
+def Invoice_amount():
+    engine = create_engine('sqlite:///DatabaseVB.db')
+    df = pd.read_sql(f'''
+    select Account_Number, Invoice_Amount, Datum
+    from traderecon
+    where Reference_code = 5200
+    order by Account_number asc, Datum asc;
+    ''', con = engine).set_index('Account_Number')
+    return df

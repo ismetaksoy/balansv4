@@ -5,9 +5,9 @@ import time
 import datetime
 import yfinance as yf
 import investpy
+from fpdf import FPDF
+import base64
 from Balans import *
-
-st.sidebar.markdown("# Hello World")
 
 st.sidebar.markdown("# Dashboard")
 # Functies voor het inladen van bestanden
@@ -23,8 +23,6 @@ if st.sidebar.button('Lees Input Bestanden'):
 #userslist = users()
 #reknr = st.sidebar.selectbox('Selecteer een gebruiker', userslist)
 #df = GetRendement(reknr)
-
-
     
 # Functie voor het presenteren van de account numbers
 userslist = Users()
@@ -45,7 +43,9 @@ st.sidebar.markdown("# Benchmark")
 bench_stocks = ['^AEX','IAEA.AS','XMAW.MI','RDSA.AS','^GSPC','^DJI','^VIX','BTC-USD','TSLA','DTM.AS','NTM.AS','TOF.AS','IGLN.L']
 benchmark_keuze = st.sidebar.selectbox('Selecteer de Benchmark', bench_stocks)
 
-if st.sidebar.button('Toon Data'):
+
+launch = st.sidebar.button('Toon Data')
+if launch:
     if not periode_keuze:
         engine = create_engine('sqlite:///DatabaseVB.db')
         df = GetRendement(reknr)
@@ -85,8 +85,7 @@ if st.sidebar.button('Toon Data'):
         st.markdown(f"#### From {start_d} to {end_d}")
 
 # Table output voor de Portefeuille Ontwikkeling op basis van de Start- en Einddatum als zoek criteria
-        st.table(ZoekPortfOntwikkeling(df, start_d, end_d))
-
+        dashboard_portfolio = st.table(ZoekPortfOntwikkeling(df, start_d, end_d))
 # Benchmark Ontwikkeling
         st.markdown(f"## Benchmark Ontwikkeling {benchmark_keuze}")
 
@@ -95,7 +94,7 @@ if st.sidebar.button('Toon Data'):
         st.table(PortfBenchOverzicht(KlantData(df, getBenchmarkData(benchmark_keuze)), start_d, end_d))
 
 # Grafiek van de Klant Portefeuille Data en bencmark
-        ZoekGraph(df, getBenchmarkData(benchmark_keuze), start_d, end_d)
+        grafiek = ZoekGraph(df, getBenchmarkData(benchmark_keuze), start_d, end_d)
 
 # Portefeuille transacties etc
         st.markdown("### Portefeuille overzicht op eind datum")
@@ -104,6 +103,13 @@ if st.sidebar.button('Toon Data'):
         st.dataframe(ShowTransaction(reknr))
         st.markdown("### Volledig overzicht gedurende periode")
         st.dataframe(df)
+
+# Overzicht alle klanten en portefeuille overzicht
+        st.markdown("### Totale overzicht Portefeuille Ontwikkeling")
+        st.table(rapport(klantenlijst(), start_d, end_d))
+
+        st.markdown("### Totale Invoice Amount")
+        st.table(Invoice_amount())
     else:
         st.markdown("## Portefeuille Ontwikkeling")
         df = GetRendement(reknr)
@@ -112,3 +118,7 @@ if st.sidebar.button('Toon Data'):
         full_bench_df = getBenchmarkData(benchmark_keuze)
         st.table(getPerf(full_bench_df, periode_keuze, benchmark_keuze))
         Graph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, periode_keuze)
+
+
+
+

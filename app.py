@@ -5,14 +5,14 @@ import time
 import datetime
 import yfinance as yf
 import investpy
-from fpdf import FPDF
 import base64
 from Balans import *
 
-
+# Maak een Pagina navigatie functie in de app
 st.sidebar.markdown("# Navigatie")
 page = st.sidebar.radio('Pagina Navigatie', ['Dashboard', 'Rapportage'])
 
+# Dashboard Pagina
 if page == 'Dashboard':
     st.sidebar.markdown("# Dashboard")
     # Functies voor het inladen van bestanden
@@ -122,6 +122,7 @@ if page == 'Dashboard':
             st.table(getPerf(full_bench_df, periode_keuze, benchmark_keuze))
             Graph(df, getBenchmarkData(benchmark_keuze), benchmark_keuze, periode_keuze)
 
+# Rapportage pagina
 else:
     # Tweede Pagina voor rapporages
     st.title('Rapportages')
@@ -135,13 +136,20 @@ else:
     start_date = st.sidebar.date_input('Start Datum')
     end_date = st.sidebar.date_input('Eind Datum')
 
+    # Laat rapportage zien van alle klanten etc.
     launch_button = st.sidebar.button('Toon Data')
+
+    # Inladen van portefeuille types
+    portefeuilletypeinladen_knop = st.sidebar. button('Laad Portefeuille type')
+    if portefeuilletypeinladen_knop:
+        PortefeuilleTypeInladen()
+
     if launch_button:
         start_d = start_date.strftime("%Y-%m-%d")
         end_d = end_date.strftime("%Y-%m-%d")
      # Overzicht alle klanten en portefeuille overzicht
         st.markdown("### Totale overzicht Portefeuille Ontwikkeling")
-        st.table(rapport(klantenlijst(), start_d, end_d))
+        st.table(Rapport(Klantenlijst(), start_d, end_d))
 
         st.markdown("### Totale Invoice Amount")
         st.table(Invoice_amount())

@@ -309,7 +309,6 @@ def ZoekGraph(data, benchmark,  start_date, end_date):
             height = 500,
             width = 750).interactive()
 
-
     graph = st.altair_chart(dfn1) 
 
     return graph
@@ -353,7 +352,6 @@ def BenchmarkDataInvesting(bench, country):
 # Ophalen van start datum klantendatabase en mergen met de benchmarks
 @st.cache()
 def KlantData(data, bench):
-
     klantdatum = data.reset_index()
     klantdatum = klantdatum[['Datum']]
     df = klantdatum.merge(bench, how = 'left', on = 'Datum' )#.groupby(['Datum']).mean()
@@ -405,7 +403,7 @@ def PortfBenchOverzicht(data, start_date, end_date):
 
 
 # Deze functie maakt een list van alle account numbers
-def klantenlijst():
+def Klantenlijst():
     engine = create_engine('sqlite:///DatabaseVB.db')
     klantenlijst = pd.read_sql(f'''
     select distinct(account_number) from posrecon;
@@ -414,7 +412,7 @@ def klantenlijst():
     return klantenlist
 
 # Deze functie berekent wat de actuele start datum is voor een portfolio (Met actueel bedoelen we de datum dat in de database zit)
-def start_date(reknr, start_d):
+def Start_date(reknr, start_d):
     engine = create_engine('sqlite:///DatabaseVB.db')
     start_date = pd.read_sql(f'''
         select distinct(datum) from Posrecon where Account_Number = "{reknr}"
@@ -428,7 +426,7 @@ def start_date(reknr, start_d):
             start_d = final_start_date
     return start_d
     
-def end_date(reknr, end_d):
+def End_date(reknr, end_d):
     engine = create_engine('sqlite:///DatabaseVB.db')
     end_date = pd.read_sql(f'''
     select distinct(datum) from Posrecon where Account_Number = "{reknr}"
@@ -444,11 +442,11 @@ def end_date(reknr, end_d):
 
 # Deze functie maakt een overzicht van portefeuille ontwikkelingen voor alle klanten
 @st.cache(allow_output_mutation=True, suppress_st_warning=True)
-def rapport(klanten, start_d, end_d):
+def Rapport(klanten, start_d, end_d):
     empty = []
     for klant in klanten:
-        sd = start_date(klant, start_d)
-        ed = end_date(klant, end_d)
+        sd = Start_date(klant, start_d)
+        ed = End_date(klant, end_d)
         data = GetRendement(klant)
         overzicht = ZoekPortfOntwikkeling(data, sd ,ed)
         overzicht['Account_Number'] = klant
@@ -469,3 +467,14 @@ def Invoice_amount():
     order by Account_number asc, Datum asc;
     ''', con = engine).set_index('Account_Number')
     return df
+
+
+# Inladen van portefeuille types in database
+def PortefeuilleTypeInladen():
+    locatie = './Portefeuille Type/'
+    conn = sqlite3.connect('DatabaseVB.db')
+    for file in os.listdir(locatie):
+        df = pd.read_csv(locatie+'/'+file)
+        df.to_sql('PortefeuilleType', if_exists = "append", con = conn)
+        os.rename(locatie+'/'+file , './ArchivePortefeuilleType/'+file)
+

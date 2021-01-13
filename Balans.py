@@ -408,7 +408,7 @@ def Klantenlijst():
     klantenlijst = pd.read_sql(f'''
     select distinct(account_number) from posrecon;
     ''', con = engine)
-    klantenlist = klantenlijst.iloc[:-1,0]
+    klantenlist = klantenlijst.iloc[:,0]
     return klantenlist
 
 # Deze functie berekent wat de actuele start datum is voor een portfolio (Met actueel bedoelen we de datum dat in de database zit)
@@ -448,7 +448,7 @@ def Rapport(klanten, start_d, end_d):
         sd = Start_date(klant, start_d)
         ed = End_date(klant, end_d)
         data = GetRendement(klant)
-        overzicht = ZoekPortfOntwikkeling(data, sd ,ed)
+        overzicht = newZoekPortfOntwikkeling(data, sd ,ed)
         overzicht['Account_Number'] = klant
         overzicht['Start_Datum'] = sd
         overzicht['Eind_Datum'] = ed
@@ -478,3 +478,24 @@ def PortefeuilleTypeInladen():
         df.to_sql('PortefeuilleType', if_exists = "append", con = conn)
         os.rename(locatie+'/'+file , './ArchivePortefeuilleType/'+file)
 
+
+
+def newZoekPortfOntwikkeling(data, sd, ed):
+    df = data.loc[sd:ed]
+    portf_startwaarde = df.iloc[1,0]
+    portf_stortingen = df.iloc[:,1].sum()
+    portf_deponeringen = df.iloc[:,2].sum()
+    portf_onttrekkingen = df.iloc[:,3].sum()
+    portf_lichtingen = df.iloc[:,4].sum()
+    portf_eindwaarde = df.iloc[-1,5]
+    portf_startcumrendement = df.iloc[1,7]
+    portf_eindcumrendement = df.iloc[-1,8]
+    portf_absrendement = portf_eindwaarde - portf_startwaarde - portf_stortingen - portf_deponeringen + portf_onttrekkingen + portf_lichtingen
+    portf_cumrendement = (portf_eindcumrendement - portf_startcumrendement) / portf_startcumrendement
+
+
+    overview = ['{:,.2f}'.format(portf_startwaarde), '{:,.2f}'.format(portf_stortingen), '{:,.2f}'.format(portf_deponeringen), 
+    '{:,.2f}'.format(portf_onttrekkingen), '{:,.2f}'.format(portf_lichtingen),'{:,.2f}'.format(portf_eindwaarde), '{:.2%}'.format(portf_startcumrendement), '{:.2%}'.format(portf_eindcumrendement), '{:,.2f}'.format(portf_absrendement), '{:.2%}'.format(portf_cumrendement)]
+
+    df_final = pd.DataFrame([overview], columns = ['Start Waarde', 'Stortingen', 'Deponeringen', 'Onttrekkingen', 'Lichtingen', 'Eind Waarde', 'Start Cum Rend', 'Eind Cum Rend', 'Abs Rendement', 'Periode Cum Rendement'])
+    return df_final
